@@ -268,20 +268,8 @@ footer {
   z-index: 2;
 }
 
-/* Proxy frame */
-#phantom-frame {
-  display: none;
-  position: fixed;
-  inset: 0;
-  border: none;
-  z-index: 100;
-  width: 100vw;
-  height: 100vh;
-  background: #080810;
-}
-
 /* Responsive */
 @media (max-width: 500px) {
   .status-pill { display: none; }
   .top-brand { font-size: 15px; }
-}
+  }
