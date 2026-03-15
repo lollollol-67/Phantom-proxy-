@@ -114,3 +114,4 @@ let port = parseInt(process.env.PORT || "");
 if (isNaN(port)) port = 8080;
 
 fastify.listen({ port, host: "0.0.0.0" });
+        
