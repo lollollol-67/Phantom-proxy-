@@ -3,7 +3,6 @@
 const form    = document.getElementById("phantom-form");
 const address = document.getElementById("phantom-address");
 const errEl   = document.getElementById("phantom-error");
-const frame   = document.getElementById("phantom-frame");
 
 // All non-URL queries go to DuckDuckGo
 const SEARCH_ENGINE = "https://duckduckgo.com/?q=%s";
@@ -22,15 +21,25 @@ form.addEventListener("submit", async (e) => {
   // Resolve input to a URL (or DuckDuckGo search)
   const url = search(input, SEARCH_ENGINE);
 
-  // Register the service worker
+  // Open about:blank tab immediately — MUST happen here synchronously
+  // inside the user gesture (submit event) or browsers will block it as a popup
+  const newTab = window.open("about:blank", "_blank");
+
+  if (!newTab) {
+    errEl.textContent = "⚠ Pop-up blocked — please allow pop-ups for this site and try again.";
+    return;
+  }
+
+  // Register the service worker on the current origin
   try {
     await registerSW();
   } catch (err) {
+    newTab.close();
     errEl.textContent = "⚠ " + err.message;
     return;
   }
 
-  // Set up the libcurl transport (tunnels through Wisp on the server)
+  // Set up libcurl transport through Wisp tunnel
   try {
     const wispUrl =
       (location.protocol === "https:" ? "wss" : "ws") +
@@ -45,17 +54,13 @@ form.addEventListener("submit", async (e) => {
       ]);
     }
   } catch (err) {
+    newTab.close();
     errEl.textContent = "⚠ Transport error: " + err.message;
     return;
   }
 
-  // Navigate the frame to the proxied URL
-  const proxied =
-    __phantom$config.prefix + __phantom$config.encodeUrl(url);
-
-  frame.style.display = "block";
-  frame.src = proxied;
-
-  // Hide the main page UI so the frame takes over full screen
-  document.getElementById("phantom-page").style.display = "none";
+  // Navigate the new tab to the proxied URL
+  // SW covers the new tab automatically since it's the same origin
+  const proxied = __phantom$config.prefix + __phantom$config.encodeUrl(url);
+  newTab.location.href = proxied;
 });
